@@ -47,10 +47,11 @@ def scrape_and_save_to_excel(url, output_file):
             #NUMBER search
             rueckennummer_element = row.find('td', class_='rueckennummer')
             number = rueckennummer_element.find('div', class_='rn_nummer').text if rueckennummer_element else None
-            number = int(number) if number and number != '-' else None
+            #number = int(number) if number and number != '-' else None
             
             # Check if the 'number' is '-' and replace it with a random number
-            if number != '-' :
+            if number and number != '-' :
+                number = int(number)
                 used_numbers.append(number)
             if number == '-':
                 number = generate_random_number(used_numbers)
@@ -83,7 +84,7 @@ def scrape_and_save_to_excel(url, output_file):
             zentriert_tds = row.find_all('td', class_='zentriert')
 
             # Extract data from the third td element (index 2)
-            birth_date = zentriert_tds[1].text.strip() if len(zentriert_tds) > 2 else None
+            birth_date = zentriert_tds[1].text.strip() if len(zentriert_tds) > 2 else 'NA'
 
             zentriert_td = row.find('td', class_='zentriert')
             #birth_date_element = zentrient_td.find_next_siblings('td')[0] if zentrient_td else None
@@ -91,11 +92,11 @@ def scrape_and_save_to_excel(url, output_file):
             
             #NATION search
             nation_element = zentriert_td.find_next_siblings('td')[2].find('img') if zentriert_td else None
-            nation = nation_element['alt'] if nation_element else None
+            nation = nation_element['alt'] if nation_element else 'NA'
             
             #HEIGHT search
             height_element = zentriert_td.find_next_siblings('td')[4] if zentriert_td else None
-            height = height_element.text if height_element else None
+            height = height_element.text if height_element else 'NA'
             
             #STRONG_FOOT search
             strong_foot_element = zentriert_td.find_next_siblings('td')[5] if zentriert_td else None
@@ -103,11 +104,11 @@ def scrape_and_save_to_excel(url, output_file):
            
             #JOIN search
             join_date_element = zentriert_td.find_next_siblings('td')[6] if zentriert_td else None
-            join_date = join_date_element.text if join_date_element else None
+            join_date = join_date_element.text if join_date_element and join_date_element.text != '-' else 'NA'
             
             #MARKET value
             value_element = row.find('td', class_='rechts')
-            value = value_element.find('a').text if value_element and value_element.find('a') else None
+            value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
             
             # Save the extracted data to the Excel sheet
             #ws.append([number, img_url, name, position, birth_date, nation, height, strong_foot, join_date, value])
