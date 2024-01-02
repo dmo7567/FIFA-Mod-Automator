@@ -3,8 +3,25 @@ from bs4 import BeautifulSoup
 import openpyxl
 from openpyxl import Workbook
 import random
+from datetime import datetime
+from datetime import date
+import csv
+import pandas as pd
+
+
+nationData = pd.read_csv('nations.csv')
+# Convert the DataFrame to a Dictionary
+temp_nations = nationData.to_dict(orient='list')
+nations_Dict = dict(zip(temp_nations['Nation Name'], temp_nations['Nation ID']))
+
+playerNames = pd.read_csv('dcplayernames.csv')
+temp_Names = playerNames.to_dict(orient='list')
+names_Dict = dict(zip(temp_Names['name'], temp_Names['nameid']))
+
 
 used_numbers = []
+f_date = date(1753, 1, 1)
+
 
 def generate_random_number(used_numbers):
     """Generate a random number between 1 and 99 that is not in the used_numbers set."""
@@ -16,9 +33,11 @@ def generate_random_number(used_numbers):
 
 
 
-
-
-
+def dateIDGenerator(year, month, day):
+    l_date = date(year, month, day)
+    delta = l_date - f_date
+    id = 62171 + int(delta.days)
+    return id
 
 
 
@@ -117,20 +136,20 @@ def scrape_and_save_to_excel_past(url, output_file):
             join_date = join_date_element.text if join_date_element and join_date_element.text != '-' else 'NA'
             
             #MARKET value
-            value_element = row.find('td', class_='rechts')
-            value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
+            #value_element = row.find('td', class_='rechts')
+            #value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
             
             # Save the extracted data to the Excel sheet
             #ws.append([number, img_url, name, position, birth_date, nation, height, strong_foot, join_date, value])
             #if number and img_url and name and position and birth_date and nation and height and strong_foot and join_date and value:
             #    ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, value])
             # Save the extracted data to the Excel sheet
-            if number and img_url and first_name and last_name and position and birth_date and nation and height and join_date and value:
+            if number and img_url and first_name and last_name and position and birth_date and nation and height and join_date:
                 # Check if strong_foot is not 'right' or 'left' and set it to 'right'
                 if strong_foot not in ['right', 'left']:
                     strong_foot = 'right'
 
-                ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, value])
+                ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date])
 
         
         # Save the workbook to the specified file
@@ -252,8 +271,8 @@ def scrape_and_save_to_excel_current(url, output_file):
             contract_date = contract_date_element.text if contract_date_element else 'NA'
 
             #MARKET value
-            value_element = row.find('td', class_='rechts')
-            value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
+            #value_element = row.find('td', class_='rechts')
+            #value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
             
             
 
@@ -262,14 +281,14 @@ def scrape_and_save_to_excel_current(url, output_file):
             #if number and img_url and name and position and birth_date and nation and height and strong_foot and join_date and value:
             #    ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, value])
             # Save the extracted data to the Excel sheet
-            if number and img_url and first_name and last_name and position and birth_date and nation and height and join_date and contract_date and value:
+            if number and img_url and first_name and last_name and position and birth_date and nation and height and join_date and contract_date:
                 # Check if strong_foot is not 'right' or 'left' and set it to 'right'
                 if strong_foot not in ['right', 'left']:
                     strong_foot = 'right'
                 if contract_date in ['-', ' , 0']:
                     contract_date = 'NA'
 
-            if number and position and birth_date and nation and height and join_date and contract_date and value:
+            if number and position and birth_date and nation and height and join_date and contract_date:
                 # Check if strong_foot is not 'right' or 'left' and set it to 'right'
                 if strong_foot not in ['right', 'left']:
                     strong_foot = 'right'
@@ -283,7 +302,7 @@ def scrape_and_save_to_excel_current(url, output_file):
                 if contract_date in ['-', ' , 0']:
                     contract_date = 'NA'
 
-            ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, contract_date, value])
+            ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, contract_date])
 
         
         # Save the workbook to the specified file
@@ -335,12 +354,299 @@ if squadRecency == 'y':
     for row_index in reversed(rows_to_delete):
         sheet.delete_rows(row_index)
 
+
+    # Columns to iterate through
+    third_column = sheet['C']
+    fourth_column = sheet['D']
+    fifth_column = sheet['E']
+    sixth_column = sheet['F']
+    seventh_column = sheet['G']
+    eighth_column = sheet['H']
+    ninth_column = sheet['I']
+    tenth_column = sheet['J']
+    eleventh_column = sheet['K']
+
+    # Iterate through each cell in the third column
+    for cell in third_column:
+        if cell.value is not None and isinstance(cell.value, str):
+            originalFirstN = cell.value
+            converted_FirstN = names_Dict.get(originalFirstN)
+            if converted_FirstN:
+                cell.value = int(converted_FirstN)
+            else:
+                names_Dict.update({originalFirstN: (int(max(names_Dict.values())) + 1)})
+                cell.value = names_Dict.get(originalFirstN)
+
+    # Iterate through each cell in the third column
+    for cell in fourth_column:
+        if cell.value is not None and isinstance(cell.value, str):
+            originalLastN = cell.value
+            converted_LastN = names_Dict.get(originalLastN)
+            if converted_LastN:
+                cell.value = int(converted_LastN)
+            else:
+                names_Dict.update({originalLastN: (int(max(names_Dict.values())) + 1)})
+                cell.value = names_Dict.get(originalLastN)
+
+
+    for cell in fifth_column:
+        if cell.value is not None and isinstance(cell.value, str):
+            converted_position = cell.value.replace("Goalkeeper", "0").replace("Centre-Back", "5").replace("Left-Back", "7").replace("Right-Back", "3").replace("Defensive Midfield", "10").replace("Mittelfeld", "14").replace("Central Midfield", "14").replace("Attacking Midfield", "18").replace("Left Winger", "27").replace("Right Winger", "23").replace("Centre-Forward", "21").replace("Left Midfield", "16").replace("Right Midfield", "12").replace("Second Striker", "25").replace("Striker", "25")
+            cell.value = int(converted_position)
+
+    # Iterate through each cell in the sixth column
+    for cell in sixth_column:
+        # Process the date string if it is not None and is a string
+        if cell.value is not None and isinstance(cell.value, str):
+            # Extract the date part from the string
+            date_string = cell.value.split('(')[0].strip()
+
+            try:
+                # Parse the date string and extract year, month, and day
+                date_object = datetime.strptime(date_string, "%b %d, %Y")
+                year = date_object.year
+                month = date_object.month
+                day = date_object.day
+
+                # Update the cell value with the formatted date
+                #cleanedDate = f"{year}, {month}, {day}"
+                cell.value = dateIDGenerator(year, month, day)
+
+            except ValueError:
+                # Handle the case where the date string is not in the expected format
+                print(f"Error processing date: {cell.value}")
+
+    # Iterate through each cell in the seventh column
+    for cell in seventh_column:
+        # Remove whitespace, "m"s, and replace commas with "."
+        if cell.value is not None and isinstance(cell.value, str):
+            originalNation = cell.value
+            converted_Nation = nations_Dict.get(originalNation)
+            cell.value = int(converted_Nation)
+
+    # Iterate through each cell in the eighth column
+    for cell in eighth_column:
+        # Remove whitespace, "m"s, and replace commas with "."
+        if cell.value is not None and isinstance(cell.value, str):
+            cleaned_value = cell.value.replace(" ", "").replace("m", "").replace(",", "")
+            cell.value = int(cleaned_value)
+
+    # Iterate through each cell in the ninth column
+    for cell in ninth_column:
+        # Remove whitespace, "m"s, and replace commas with "."
+        if cell.value is not None and isinstance(cell.value, str):
+            sf_value = cell.value.replace("right", "1").replace("left", "2")
+            cell.value = int(sf_value)
+
+    # Iterate through each cell in the tenth column
+    for cell in tenth_column:
+        # Process the date string if it is not None and is a string
+        if cell.value is not None and isinstance(cell.value, str):
+            
+            date_string = cell.value
+
+            try:
+                # Parse the date string and extract year, month, and day
+                date_object = datetime.strptime(date_string, "%b %d, %Y")
+                year = date_object.year
+                month = date_object.month
+                day = date_object.day
+
+                # Update the cell value with the formatted date
+                cell.value = dateIDGenerator(year, month, day)
+
+            except ValueError:
+                # Handle the case where the date string is not in the expected format
+                cell.value = dateIDGenerator(random.randint(2018,2022), random.randint(1,12), random.randint(1,28))
+
+    # Iterate through each cell in the eleventh column
+    for cell in eleventh_column:
+        # Process the date string if it is not None and is a string
+        if cell.value is not None and isinstance(cell.value, str):
+            
+            date_string = cell.value
+
+            try:
+                # Parse the date string and extract year, month, and day
+                date_object = datetime.strptime(date_string, "%b %d, %Y")
+                year = date_object.year
+                month = date_object.month
+                day = date_object.day
+
+                # Update the cell value with the formatted date
+                cell.value = dateIDGenerator(year, month, day)
+
+            except ValueError:
+                # Handle the case where the date string is not in the expected format
+                cell.value = dateIDGenerator(random.randint(2018,2022), random.randint(1,12), random.randint(1,28))
+
+
     # Save the modified workbook
     workbook.save(output_excel_file)
 
+
+    # Convert the dictionary to a DataFrame
+    finalNames = pd.DataFrame(list(names_Dict.items()), columns=['name', 'nameid'])
+    # Specify the CSV file path
+    csv_file_path = 'dcplayernames.txt'
+    # Write the DataFrame to a CSV file
+    finalNames.to_csv(csv_file_path, index=False)
+
+
+
+
+
+
+
+
 elif squadRecency == 'n':
     scrape_and_save_to_excel_past(url_to_scrape, output_excel_file)
+
+    # Load the workbook
+    workbook = openpyxl.load_workbook(output_excel_file)
+
+    # Select the active sheet
+    sheet = workbook.active
+
+    for row in sheet.iter_rows(min_row=2, max_row=sheet.max_row, min_col=1, max_col=4):
+        # Check if the cell in the first column is not empty
+        if row[0].value is not None and all(cell.value is None for cell in row[1:]):
+            # Get the values of the three cells below and set them in the corresponding cells
+            for i in range(1, 4):  # Assuming you want to copy three cells below
+                cell_below = sheet.cell(row=row[0].row + 1, column=row[0].column + i)
+                cell_to_set = sheet.cell(row=row[0].row, column=row[0].column + i)
+                cell_to_set.value = cell_below.value
+
+    # Collect rows to delete in a list
+    rows_to_delete = []
+    for row in sheet.iter_rows(min_row=1, max_row=sheet.max_row, min_col=1, max_col=1):
+        # Check if the cell in the first column is not empty
+        if row[0].value is None:
+            # Add the row to the list of rows to delete
+            rows_to_delete.append(row[0].row)
+
+    # Iterate over the list of rows to delete in reverse order
+    for row_index in reversed(rows_to_delete):
+        sheet.delete_rows(row_index)
+
+
+    # Columns to iterate through
+    third_column = sheet['C']
+    fourth_column = sheet['D']
+    fifth_column = sheet['E']
+    sixth_column = sheet['F']
+    seventh_column = sheet['G']
+    eighth_column = sheet['H']
+    ninth_column = sheet['I']
+    tenth_column = sheet['J']
+
+    # Iterate through each cell in the third column
+    for cell in third_column:
+        if cell.value is not None and isinstance(cell.value, str):
+            originalFirstN = cell.value
+            converted_FirstN = names_Dict.get(originalFirstN)
+            if converted_FirstN:
+                cell.value = int(converted_FirstN)
+            else:
+                names_Dict.update({originalFirstN: (int(max(names_Dict.values())) + 1)})
+                cell.value = names_Dict.get(originalFirstN)
+
+    # Iterate through each cell in the third column
+    for cell in fourth_column:
+        if cell.value is not None and isinstance(cell.value, str):
+            originalLastN = cell.value
+            converted_LastN = names_Dict.get(originalLastN)
+            if converted_LastN:
+                cell.value = int(converted_LastN)
+            else:
+                names_Dict.update({originalLastN: (int(max(names_Dict.values())) + 1)})
+                cell.value = names_Dict.get(originalLastN)
+
+
+    for cell in fifth_column:
+        if cell.value is not None and isinstance(cell.value, str):
+            converted_position = cell.value.replace("Goalkeeper", "0").replace("Centre-Back", "5").replace("Left-Back", "7").replace("Right-Back", "3").replace("Defensive Midfield", "10").replace("Mittelfeld", "14").replace("Central Midfield", "14").replace("Attacking Midfield", "18").replace("Left Winger", "27").replace("Right Winger", "23").replace("Centre-Forward", "21").replace("Left Midfield", "16").replace("Right Midfield", "12").replace("Second Striker", "25").replace("Striker", "25")
+            cell.value = int(converted_position)
+
+    # Iterate through each cell in the sixth column
+    for cell in sixth_column:
+        # Process the date string if it is not None and is a string
+        if cell.value is not None and isinstance(cell.value, str):
+            # Extract the date part from the string
+            date_string = cell.value.split('(')[0].strip()
+
+            try:
+                # Parse the date string and extract year, month, and day
+                date_object = datetime.strptime(date_string, "%b %d, %Y")
+                year = date_object.year
+                month = date_object.month
+                day = date_object.day
+
+                # Update the cell value with the formatted date
+                #cleanedDate = f"{year}, {month}, {day}"
+                cell.value = dateIDGenerator(year, month, day)
+
+            except ValueError:
+                # Handle the case where the date string is not in the expected format
+                print(f"Error processing date: {cell.value}")
+
+    # Iterate through each cell in the seventh column
+    for cell in seventh_column:
+        # Remove whitespace, "m"s, and replace commas with "."
+        if cell.value is not None and isinstance(cell.value, str):
+            originalNation = cell.value
+            converted_Nation = nations_Dict.get(originalNation)
+            cell.value = int(converted_Nation)
+
+    # Iterate through each cell in the eighth column
+    for cell in eighth_column:
+        # Remove whitespace, "m"s, and replace commas with "."
+        if cell.value is not None and isinstance(cell.value, str):
+            cleaned_value = cell.value.replace(" ", "").replace("m", "").replace(",", "")
+            cell.value = int(cleaned_value)
+
+    # Iterate through each cell in the ninth column
+    for cell in ninth_column:
+        # Remove whitespace, "m"s, and replace commas with "."
+        if cell.value is not None and isinstance(cell.value, str):
+            sf_value = cell.value.replace("right", "1").replace("left", "2")
+            cell.value = int(sf_value)
+
+    # Iterate through each cell in the tenth column
+    for cell in tenth_column:
+        # Process the date string if it is not None and is a string
+        if cell.value is not None and isinstance(cell.value, str):
+            
+            date_string = cell.value
+
+            try:
+                # Parse the date string and extract year, month, and day
+                date_object = datetime.strptime(date_string, "%b %d, %Y")
+                year = date_object.year
+                month = date_object.month
+                day = date_object.day
+
+                # Update the cell value with the formatted date
+                cell.value = dateIDGenerator(year, month, day)
+
+            except ValueError:
+                # Handle the case where the date string is not in the expected format
+                cell.value = dateIDGenerator(random.randint(2018,2022), random.randint(1,12), random.randint(1,28))
+
+
+    # Save the modified workbook
+    workbook.save(output_excel_file)
+
+
+    # Convert the dictionary to a DataFrame
+    finalNames = pd.DataFrame(list(names_Dict.items()), columns=['name', 'nameid'])
+    # Specify the CSV file path
+    csv_file_path = 'dcplayernames.txt'
+    # Write the DataFrame to a CSV file
+    finalNames.to_csv(csv_file_path, index=False)
+
+
 else:
-    print("Errored input, please try again")
+    print("Errored input, please try running the script again")
 
 
