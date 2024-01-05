@@ -136,20 +136,20 @@ def scrape_and_save_to_excel_past(url, output_file):
             join_date = join_date_element.text if join_date_element and join_date_element.text != '-' else 'NA'
             
             #MARKET value
-            #value_element = row.find('td', class_='rechts')
-            #value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
+            value_element = row.find('td', class_='rechts')
+            value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
             
             # Save the extracted data to the Excel sheet
             #ws.append([number, img_url, name, position, birth_date, nation, height, strong_foot, join_date, value])
             #if number and img_url and name and position and birth_date and nation and height and strong_foot and join_date and value:
             #    ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, value])
             # Save the extracted data to the Excel sheet
-            if number and img_url and first_name and last_name and position and birth_date and nation and height and join_date:
+            if number and img_url and first_name and last_name and position and birth_date and nation and height and join_date and value:
                 # Check if strong_foot is not 'right' or 'left' and set it to 'right'
                 if strong_foot not in ['right', 'left']:
                     strong_foot = 'right'
 
-                ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date])
+                ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, value])
 
         
         # Save the workbook to the specified file
@@ -271,8 +271,8 @@ def scrape_and_save_to_excel_current(url, output_file):
             contract_date = contract_date_element.text if contract_date_element else 'NA'
 
             #MARKET value
-            #value_element = row.find('td', class_='rechts')
-            #value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
+            value_element = row.find('td', class_='rechts')
+            value = value_element.find('a').text if value_element and value_element.find('a') else 'NA'
             
             
 
@@ -302,7 +302,7 @@ def scrape_and_save_to_excel_current(url, output_file):
                 if contract_date in ['-', ' , 0']:
                     contract_date = 'NA'
 
-            ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, contract_date])
+            ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, contract_date, value])
 
         
         # Save the workbook to the specified file
@@ -488,9 +488,9 @@ if squadRecency == 'y':
     # Convert the dictionary to a DataFrame
     finalNames = pd.DataFrame(list(names_Dict.items()), columns=['name', 'nameid'])
     # Specify the CSV file path
-    csv_file_path = 'dcplayernames.txt'
+    dc_csv_file_path = 'dcplayernames.txt'
     # Write the DataFrame to a CSV file
-    finalNames.to_csv(csv_file_path, index=False)
+    finalNames.to_csv(dc_csv_file_path, index=False)
 
 
 
@@ -641,12 +641,336 @@ elif squadRecency == 'n':
     # Convert the dictionary to a DataFrame
     finalNames = pd.DataFrame(list(names_Dict.items()), columns=['name', 'nameid'])
     # Specify the CSV file path
-    csv_file_path = 'dcplayernames.txt'
+    dc_csv_file_path = 'dcplayernames.txt'
     # Write the DataFrame to a CSV file
-    finalNames.to_csv(csv_file_path, index=False)
+    finalNames.to_csv(dc_csv_file_path, index=False)
 
 
 else:
     print("Errored input, please try running the script again")
 
 
+
+
+
+
+
+#########################################################################################################
+
+
+# Player data converted into rows of data to be appended to the players table
+
+
+#########################################################################################################
+
+
+defaultPlayerTable = 'players.txt'
+newSquad = 'newSquad.txt'
+
+def playerTableHandler(playerTable, excelFile):
+    # Load the workbook from the output file
+    output_workbook = openpyxl.load_workbook(output_excel_file)
+    output_sheet = output_workbook.active
+
+    # Load the workbook from the players file
+    #players_workbook = openpyxl.load_workbook(defaultPlayerTable)
+    #players_sheet = players_workbook.active
+
+    start_row_number = 20249
+
+    # Open the text file in write mode
+    with open(newSquad, 'w', encoding='utf-16-le') as new_text_file:
+        # Iterate through rows in the Excel file
+        for row_number, row in enumerate(output_sheet.iter_rows(min_row=0, max_row=output_sheet.max_row, min_col=1, max_col=127), start=start_row_number):
+        # Example: Extract data from Excel columns and store in variables
+                firstnameid = row[2].value
+                lastnameid = row[3].value
+                playerjerseynameid = lastnameid
+                commonnameid = lastnameid
+                skintypecode = 0
+                trait2 = 0
+                haircolorcode = random.randint(0,11)
+                facialhairtypecode = random.randint(0,7)
+                curve = random.randint(1,99)
+                jerseystylecode = 1
+                agility = random.randint(1,99)
+                tattooback = 0
+                accessorycode4 = 0
+                gksavetype = 0
+                positioning = random.randint(1,99)
+                tattooleftarm = 0
+                hairtypecode = random.randint(1,140)
+                standingtackle = 21
+                preferredposition3 = -1
+                longpassing = 35
+                penalties = 54
+                animfreekickstartposcode = 0
+                isretiring = 0
+                longshots = 3
+                gkdiving = 32
+                interceptions = 42
+                shoecolorcode2 = 23
+                crossing = 75
+                potential = 80
+                gkreflexes = 32
+                finishingcode1 = 0
+                reactions = 46
+                composure = 89
+                vision = 54
+                contractvaliduntil = 2025
+                finishing = 68
+                dribbling = 69
+                slidingtackle = 69
+                accessorycode3 = 0
+                accessorycolourcode1 = 0
+                headtypecode = 1502
+                driref = 79
+                sprintspeed = 50
+                height = row[7].value
+                hasseasonaljersey = 0
+                tattoohead = 0
+                preferredposition2 = -1
+                strength = 49
+                shoetypecode = 42
+                birthdate = row[5].value
+                preferredposition1 = row[4].value
+                tattooleftleg = 0
+                ballcontrol = 79
+                phypos = 84
+                shotpower = 59
+                trait1 = 0
+                socklengthcode = 2
+                weight = 70
+                hashighqualityhead = 0
+                gkglovetypecode = 0
+                tattoorightarm = 0
+                balance = 59
+                gender = 0
+                headassetid = 270535
+                gkkicking = 40
+                defspe = 40
+                internationalrep = 1
+                shortpassing = 60
+                freekickaccuracy = 89
+                skillmoves = 3
+                faceposerpreset = 0
+                usercaneditname = 0
+                avatarpomid = 0
+                attackingworkrate = 2
+                finishingcode2 = 0
+                aggression = 79
+                acceleration = 69
+                paskic = 73
+                headingaccuracy = 69
+                iscustomized = 0
+                eyebrowcode = 0
+                runningcode2 = 0
+                modifier = 0
+                gkhandling = 39
+                eyecolorcode = 5
+                jerseysleevelengthcode = 0
+                accessorycolourcode3 = 0
+                accessorycode1 = 0
+                playerjointeamdate = row[9].value
+                headclasscode = 0
+                defensiveworkrate = 3
+                tattoofront = 0
+                nationality = row[6].value
+                preferredfoot = row[8].value
+                sideburnscode = 0
+                weakfootabilitytypecode = 3
+                jumping = 69
+                personality = 2
+                gkkickstyle = 0
+                stamina = 85
+                playerid = 80000
+                marking = 69
+                accessorycolourcode4 = 0
+                gkpositioning = 49
+                headvariation = 0
+                skillmoveslikelihood = 3
+                shohan = 65
+                skintonecode = random.randint(1,11)
+                shortstyle = 0
+                overallrating = random.randint(50,90)
+                smallsidedshoetypecode = 500
+                emotion = 1
+                runstylecode = 0
+                jerseyfit = 0
+                accessorycode2 = 0
+                shoedesigncode = 0
+                shoecolorcode1 = 0
+                hairstylecode = 0
+                bodytypecode = 2
+                animpenaltiesstartposcode = 0
+                pacdiv = 79
+                runningcode1 = 0
+                preferredposition4 = -1
+                volleys = 83
+                accessorycolourcode2 = 0
+                tattoorightleg = 0
+                facialhaircolorcode = random.randint(0,4)
+
+                # Construct a row with the modified data
+                row_data = [
+                    firstnameid,
+                    lastnameid,
+                    playerjerseynameid,
+                    commonnameid,
+                    skintypecode,
+                    trait2,
+                    haircolorcode,
+                    facialhairtypecode,
+                    curve,
+                    jerseystylecode,
+                    agility,
+                    tattooback,
+                    accessorycode4,
+                    gksavetype,
+                    positioning,
+                    tattooleftarm,
+                    hairtypecode,
+                    standingtackle,
+                    preferredposition3,
+                    longpassing,
+                    penalties,
+                    animfreekickstartposcode,
+                    isretiring,
+                    longshots,
+                    gkdiving,
+                    interceptions,
+                    shoecolorcode2,
+                    crossing,
+                    potential,
+                    gkreflexes,
+                    finishingcode1,
+                    reactions,
+                    composure,
+                    vision,
+                    contractvaliduntil,
+                    finishing,
+                    dribbling,
+                    slidingtackle,
+                    accessorycode3,
+                    accessorycolourcode1,
+                    headtypecode,
+                    driref,
+                    sprintspeed,
+                    height,
+                    hasseasonaljersey,
+                    tattoohead,
+                    preferredposition2,
+                    strength,
+                    shoetypecode,
+                    birthdate,
+                    preferredposition1,
+                    tattooleftleg,
+                    ballcontrol,
+                    phypos,
+                    shotpower,
+                    trait1,
+                    socklengthcode,
+                    weight,
+                    hashighqualityhead,
+                    gkglovetypecode,
+                    tattoorightarm,
+                    balance,
+                    gender,
+                    headassetid,
+                    gkkicking,
+                    defspe,
+                    internationalrep,
+                    shortpassing,
+                    freekickaccuracy,
+                    skillmoves,
+                    faceposerpreset,
+                    usercaneditname,
+                    avatarpomid,
+                    attackingworkrate,
+                    finishingcode2,
+                    aggression,
+                    acceleration,
+                    paskic,
+                    headingaccuracy,
+                    iscustomized,
+                    eyebrowcode,
+                    runningcode2,
+                    modifier,
+                    gkhandling,
+                    eyecolorcode,
+                    jerseysleevelengthcode,
+                    accessorycolourcode3,
+                    accessorycode1,
+                    playerjointeamdate,
+                    headclasscode,
+                    defensiveworkrate,
+                    tattoofront,
+                    nationality,
+                    preferredfoot,
+                    sideburnscode,
+                    weakfootabilitytypecode,
+                    jumping,
+                    personality,
+                    gkkickstyle,
+                    stamina,
+                    playerid,
+                    marking,
+                    accessorycolourcode4,
+                    gkpositioning,
+                    headvariation,
+                    skillmoveslikelihood,
+                    shohan,
+                    skintonecode,
+                    shortstyle,
+                    overallrating,
+                    smallsidedshoetypecode,
+                    emotion,
+                    runstylecode,
+                    jerseyfit,
+                    accessorycode2,
+                    shoedesigncode,
+                    shoecolorcode1,
+                    hairstylecode,
+                    bodytypecode,
+                    animpenaltiesstartposcode,
+                    pacdiv,
+                    runningcode1,
+                    preferredposition4,
+                    volleys,
+                    accessorycolourcode2,
+                    tattoorightleg,
+                    facialhaircolorcode
+                ]
+
+                # Update the existing row in the players Excel file with the new data
+                #for col_num, value in enumerate(row_data, start=1):
+                #    players_sheet.cell(row=row_number, column=col_num, value=value)
+
+                # Convert the row data to a tab-delimited string
+                row_string = '\t'.join(map(str, row_data))
+
+                # Write the row string to the text file
+                new_text_file.write(row_string + '\n')
+ 
+
+    # Save the changes to the players Excel file
+    #players_workbook.save(defaultPlayerTable)
+    print('players.txt has been modified and saved')
+
+playerTableHandler(defaultPlayerTable, output_excel_file)
+
+
+
+
+# Reading the original file
+with open(defaultPlayerTable, 'r', encoding='utf-16-le') as original_file:
+    original_data = original_file.read().strip()
+
+# Reading the new file
+with open(newSquad, 'r', encoding='utf-16-le') as new_file:
+    new_data = new_file.read().strip()
+
+# Combining data and writing to another file
+combined_data = original_data + '\n' + new_data
+with open('combined.txt', 'w', encoding='utf-16-le') as combined_file:
+    combined_file.write(combined_data)
