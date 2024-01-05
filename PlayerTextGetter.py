@@ -7,6 +7,7 @@ from datetime import datetime
 from datetime import date
 import csv
 import pandas as pd
+from io import StringIO
 
 
 nationData = pd.read_csv('nations.csv')
@@ -148,6 +149,8 @@ def scrape_and_save_to_excel_past(url, output_file):
                 # Check if strong_foot is not 'right' or 'left' and set it to 'right'
                 if strong_foot not in ['right', 'left']:
                     strong_foot = 'right'
+                if not last_name:
+                    last_name = first_name
 
                 ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, value])
 
@@ -287,6 +290,8 @@ def scrape_and_save_to_excel_current(url, output_file):
                     strong_foot = 'right'
                 if contract_date in ['-', ' , 0']:
                     contract_date = 'NA'
+                if not last_name:
+                    last_name = first_name
 
             if number and position and birth_date and nation and height and join_date and contract_date:
                 # Check if strong_foot is not 'right' or 'left' and set it to 'right'
@@ -294,6 +299,8 @@ def scrape_and_save_to_excel_current(url, output_file):
                     strong_foot = 'right'
                 if contract_date in ['-', ' , 0']:
                     contract_date = 'NA'
+                if not last_name:
+                    last_name = first_name
 
             if img_url and first_name and last_name:
                 # Check if strong_foot is not 'right' or 'left' and set it to 'right'
@@ -301,6 +308,11 @@ def scrape_and_save_to_excel_current(url, output_file):
                     strong_foot = 'right'
                 if contract_date in ['-', ' , 0']:
                     contract_date = 'NA'
+                if not last_name:
+                    last_name = first_name
+            
+            if first_name and not last_name:
+                last_name = first_name
 
             ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, contract_date, value])
 
@@ -377,7 +389,7 @@ if squadRecency == 'y':
                 names_Dict.update({originalFirstN: (int(max(names_Dict.values())) + 1)})
                 cell.value = names_Dict.get(originalFirstN)
 
-    # Iterate through each cell in the third column
+    # Iterate through each cell in the fourth column
     for cell in fourth_column:
         if cell.value is not None and isinstance(cell.value, str):
             originalLastN = cell.value
@@ -488,9 +500,12 @@ if squadRecency == 'y':
     # Convert the dictionary to a DataFrame
     finalNames = pd.DataFrame(list(names_Dict.items()), columns=['name', 'nameid'])
     # Specify the CSV file path
-    dc_csv_file_path = 'dcplayernames.txt'
-    # Write the DataFrame to a CSV file
-    finalNames.to_csv(dc_csv_file_path, index=False)
+    dc_file_path = 'dcplayernames.txt'
+    # Write the DataFrame to a text file with utf-16-le encoding and tab separator
+    with open(dc_file_path, 'w', encoding='utf-16-le') as file:
+        file.write('\t'.join(finalNames.columns) + '\n')  # Write header
+        for _, row in finalNames.iterrows():
+            file.write('\t'.join(map(str, row)) + '\n')  # Write each row
 
 
 
@@ -641,9 +656,13 @@ elif squadRecency == 'n':
     # Convert the dictionary to a DataFrame
     finalNames = pd.DataFrame(list(names_Dict.items()), columns=['name', 'nameid'])
     # Specify the CSV file path
-    dc_csv_file_path = 'dcplayernames.txt'
-    # Write the DataFrame to a CSV file
-    finalNames.to_csv(dc_csv_file_path, index=False)
+    dc_file_path = 'dcplayernames.txt'
+    
+    # Write the DataFrame to a text file with utf-16-le encoding and tab separator
+    with open(dc_file_path, 'w', encoding='utf-16-le') as file:
+        file.write('\t'.join(finalNames.columns) + '\n')  # Write header
+        for _, row in finalNames.iterrows():
+            file.write('\t'.join(map(str, row)) + '\n')  # Write each row
 
 
 else:
@@ -955,7 +974,7 @@ def playerTableHandler(playerTable, excelFile):
 
     # Save the changes to the players Excel file
     #players_workbook.save(defaultPlayerTable)
-    print('players.txt has been modified and saved')
+    print('players.txt has been modified and saved as combined.txt')
 
 playerTableHandler(defaultPlayerTable, output_excel_file)
 
