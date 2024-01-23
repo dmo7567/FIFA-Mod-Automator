@@ -3,11 +3,21 @@ from bs4 import BeautifulSoup
 import openpyxl
 from openpyxl import Workbook
 import random
-from datetime import datetime
-from datetime import date
+from datetime import date, datetime, timedelta
 import csv
 import pandas as pd
 from io import StringIO
+import os
+import tensorflow as tf
+from tensorflow import _keras_module
+from keras.models import load_model
+import cv2
+import imghdr
+import numpy as np
+from matplotlib import pyplot as plt
+from keras.models import Sequential
+from keras.layers import Conv2D, MaxPooling2D, Dense, Flatten, Dropout
+from keras.metrics import Precision, Recall, BinaryAccuracy
 
 
 nationData = pd.read_csv('nations.csv')
@@ -21,7 +31,7 @@ names_Dict = dict(zip(temp_Names['name'], temp_Names['nameid']))
 
 
 used_numbers = []
-f_date = date(1753, 1, 1)
+
 
 
 def generate_random_number(used_numbers):
@@ -36,11 +46,195 @@ def generate_random_number(used_numbers):
 
 def dateIDGenerator(year, month, day):
     l_date = date(year, month, day)
+    f_date = date(1753, 1, 1)
     delta = l_date - f_date
     id = 62171 + int(delta.days)
     return id
 
 
+
+def ageGetter(id):
+    base_date = date(1753, 1, 1)
+    delta_days = id - 62171
+    l_date = base_date + timedelta(days=delta_days)
+    
+    today = date.today()
+    years_passed = today.year - l_date.year - ((today.month, today.day) < (l_date.month, l_date.day))
+    
+    return int(years_passed)
+
+
+
+
+def attackerEstimation(age, value, avgLeagueSquadValue):
+    if avgLeagueSquadValue >= 150:
+        valueModifier = (0.1*value)
+        qualityModifier = (0.005*551)
+        baseRating = 70
+        ageModifier = (21-age)*0.9
+        rating = round((valueModifier+qualityModifier+baseRating)-ageModifier)
+        return rating
+        #print("Player rating is: " + str(rating))
+    else:
+        valueModifier = (0.5*value)
+        qualityModifier = (0.005*avgLeagueSquadValue)
+        baseRating = 65
+        ageModifier = (21-age)
+        rating = round((valueModifier+qualityModifier+baseRating)-ageModifier)
+        return rating
+        #print("Player rating is: " + str(rating))
+
+
+
+
+
+
+def download_image(urltoDownload, filename):
+        response = requests.get(urltoDownload)
+        with open(filename, 'wb') as f:
+            f.write(response.content)
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+def predictHairstyle(urltoDownload):
+    # Download the image from the URL
+    img_filename = 'downloaded_image.webp'
+    download_image(urltoDownload, img_filename)
+
+    img = cv2.imread(img_filename)
+    resize = tf.image.resize(img, (256,256))
+
+    new_model = load_model(os.path.join('models', 'hairStyleClassifier.h5'))
+    predVals = new_model.predict(np.expand_dims(resize/255, 0))
+    maxVal = np.max(predVals[0])
+
+    # Access each probability individually and convert to regular float
+    c1 = float(predVals[0][0])
+    c2 = float(predVals[0][1])
+    c3 = float(predVals[0][2])
+    c4 = float(predVals[0][3])
+    c5 = float(predVals[0][4])
+    c6 = float(predVals[0][5])
+    c7 = float(predVals[0][6])
+    Codes = [c1, c2, c3, c4, c5, c6, c7]
+
+    for code in Codes:
+        if code == c1 and code == maxVal:
+            return 0
+        elif code == c2 and code == maxVal:
+            return 14
+        elif code == c3 and code == maxVal:
+            return 18
+        elif code == c4 and code == maxVal:
+            return 24
+        elif code == c5 and code == maxVal:
+            return 25
+        elif code == c6 and code == maxVal:
+            return 82
+        elif code == c7 and code == maxVal:
+            return 275
+
+
+
+
+
+
+def predictFacialHair(urltoDownload):
+    # Download the image from the URL
+    img_filename = 'downloaded_image.webp'
+    download_image(urltoDownload, img_filename)
+
+    img = cv2.imread(img_filename)
+    resize = tf.image.resize(img, (256,256))
+
+    new_model = load_model(os.path.join('models', 'facialHairClassifier.h5'))
+    predVal = new_model.predict(np.expand_dims(resize/255, 0))
+    maxVal = np.max(predVal[0])
+
+    # Access each probability individually and convert to regular float
+    c1 = float(predVal[0][0])
+    c2 = float(predVal[0][1])
+    c3 = float(predVal[0][2])
+    c4 = float(predVal[0][3])
+    c5 = float(predVal[0][4])
+    Codes = [c1, c2, c3, c4, c5]
+
+    for code in Codes:
+        if code == maxVal and code == c1:
+            return 0
+        elif code == maxVal and code == c2:
+            return 4
+        elif code == maxVal and code == c3:
+            return 5
+        elif code == maxVal and code == c4:
+            return 8
+        elif code == maxVal and code == c5:
+            return 7
+
+
+
+
+def predictSkinTone(urltoDownload):
+    # Download the image from the URL
+    img_filename = 'downloaded_image.webp'
+    download_image(urltoDownload, img_filename)
+
+    img = cv2.imread(img_filename)
+    resize = tf.image.resize(img, (256,256))
+
+    new_model = load_model(os.path.join('models', 'skinToneClassifier.h5'))
+    predVal = new_model.predict(np.expand_dims(resize/255, 0))
+    maxVal = np.max(predVal[0])
+
+    # Access each probability individually and convert to regular float
+    c1 = float(predVal[0][0])
+    c2 = float(predVal[0][1])
+    c3 = float(predVal[0][2])
+    c4 = float(predVal[0][3])
+    c5 = float(predVal[0][4])
+    c6 = float(predVal[0][5])
+    skinToneCodes = [c1, c2, c3, c4, c5, c6]
+
+    for code in skinToneCodes:
+        if code == maxVal and code == c1:
+            return 1
+        elif code == maxVal and code == c2:
+            return 4
+        elif code == maxVal and code == c3:
+            return 5
+        elif code == maxVal and code == c4:
+            return 6
+        elif code == maxVal and code == c5:
+            return 8
+        elif code == maxVal and code == c6:
+            return 10
+
+
+
+
+#####################################################################################################
 
 
 
@@ -313,6 +507,9 @@ def scrape_and_save_to_excel_current(url, output_file):
             
             if first_name and not last_name:
                 last_name = first_name
+            
+            if height == '-':
+                height = 177
 
             ws.append([number, img_url, first_name, last_name, position, birth_date, nation, height, strong_foot, join_date, contract_date, value])
 
@@ -377,6 +574,7 @@ if squadRecency == 'y':
     ninth_column = sheet['I']
     tenth_column = sheet['J']
     eleventh_column = sheet['K']
+    twelfth_column = sheet['L']
 
     # Iterate through each cell in the third column
     for cell in third_column:
@@ -491,6 +689,16 @@ if squadRecency == 'y':
             except ValueError:
                 # Handle the case where the date string is not in the expected format
                 cell.value = dateIDGenerator(random.randint(2018,2022), random.randint(1,12), random.randint(1,28))
+
+    # Iterate through each cell in the twelfth column
+    for cell in twelfth_column:
+        if cell.value is not None and isinstance(cell.value, str) and 'k' not in cell.value:
+            cleaned_value = cell.value.replace("€", "").replace("m", "")
+            cell.value = float(cleaned_value)
+        else:
+            cleaned_value = cell.value.replace("€", "").replace("m", "").replace("k", "")
+            cleaned_value = float(cleaned_value) / 1000
+            cell.value = float(cleaned_value)
 
 
     # Save the modified workbook
@@ -683,8 +891,13 @@ else:
 #########################################################################################################
 
 
+
+
+
 defaultPlayerTable = 'players.txt'
 newSquad = 'newSquad.txt'
+
+
 
 def playerTableHandler(playerTable, excelFile):
     # Load the workbook from the output file
@@ -697,121 +910,132 @@ def playerTableHandler(playerTable, excelFile):
 
     start_row_number = 20249
 
+    playerIDCounter = 80000
+
     # Open the text file in write mode
     with open(newSquad, 'w', encoding='utf-16-le') as new_text_file:
         # Iterate through rows in the Excel file
         for row_number, row in enumerate(output_sheet.iter_rows(min_row=0, max_row=output_sheet.max_row, min_col=1, max_col=127), start=start_row_number):
         # Example: Extract data from Excel columns and store in variables
+                birthdate = row[5].value
+                overallrating = attackerEstimation(ageGetter(birthdate), row[11].value, 300)
+
                 firstnameid = row[2].value
                 lastnameid = row[3].value
                 playerjerseynameid = lastnameid
                 commonnameid = lastnameid
                 skintypecode = 0
                 trait2 = 0
-                haircolorcode = random.randint(0,11)
-                facialhairtypecode = random.randint(0,7)
-                curve = random.randint(1,99)
+                haircolorcode = 1
+                facialhairtypecode = predictFacialHair(row[1].value)
+                curve = random.randint(overallrating-5, overallrating+5)
                 jerseystylecode = 1
-                agility = random.randint(1,99)
+                agility = random.randint(overallrating-5, overallrating+5)
                 tattooback = 0
                 accessorycode4 = 0
                 gksavetype = 0
-                positioning = random.randint(1,99)
+                positioning = random.randint(overallrating-5, overallrating+5)
                 tattooleftarm = 0
-                hairtypecode = random.randint(1,140)
-                standingtackle = 21
+                hairtypecode = predictHairstyle(row[1].value)
+                standingtackle = random.randint(overallrating-5, overallrating+5)
                 preferredposition3 = -1
-                longpassing = 35
-                penalties = 54
+                longpassing = random.randint(overallrating-5, overallrating+5)
+                penalties = random.randint(overallrating-5, overallrating+5)
                 animfreekickstartposcode = 0
                 isretiring = 0
-                longshots = 3
-                gkdiving = 32
-                interceptions = 42
+                longshots = random.randint(overallrating-5, overallrating+5)
+                gkdiving = random.randint(overallrating-5, overallrating+5)
+                interceptions = random.randint(overallrating-5, overallrating+5)
                 shoecolorcode2 = 23
-                crossing = 75
-                potential = 80
-                gkreflexes = 32
+                crossing = random.randint(overallrating-5, overallrating+5)
+                potential = random.randint(overallrating, overallrating+5)
+                gkreflexes = random.randint(overallrating-5, overallrating+5)
                 finishingcode1 = 0
-                reactions = 46
-                composure = 89
-                vision = 54
+                reactions = random.randint(overallrating-5, overallrating+5)
+                composure = random.randint(overallrating-5, overallrating+5)
+                vision = random.randint(overallrating-5, overallrating+5)
                 contractvaliduntil = 2025
-                finishing = 68
-                dribbling = 69
-                slidingtackle = 69
+                finishing = random.randint(overallrating-5, overallrating+5)
+                dribbling = random.randint(overallrating-5, overallrating+5)
+                slidingtackle = random.randint(overallrating-5, overallrating+5)
                 accessorycode3 = 0
                 accessorycolourcode1 = 0
-                headtypecode = 1502
-                driref = 79
-                sprintspeed = 50
+                headtypecode = 0
+                driref = random.randint(overallrating-5, overallrating+5)
+                sprintspeed = random.randint(overallrating-5, overallrating+5)
                 height = row[7].value
                 hasseasonaljersey = 0
                 tattoohead = 0
                 preferredposition2 = -1
-                strength = 49
+                strength = random.randint(overallrating-5, overallrating+5)
                 shoetypecode = 42
                 birthdate = row[5].value
                 preferredposition1 = row[4].value
                 tattooleftleg = 0
-                ballcontrol = 79
-                phypos = 84
-                shotpower = 59
+                ballcontrol = random.randint(overallrating-5, overallrating+5)
+                phypos = random.randint(overallrating-5, overallrating+5)
+                shotpower = random.randint(overallrating-5, overallrating+5)
                 trait1 = 0
                 socklengthcode = 2
                 weight = 70
                 hashighqualityhead = 0
                 gkglovetypecode = 0
                 tattoorightarm = 0
-                balance = 59
+                balance = random.randint(overallrating-5, overallrating+5)
                 gender = 0
-                headassetid = 270535
-                gkkicking = 40
-                defspe = 40
+                headassetid = 0
+                gkkicking = random.randint(overallrating-5, overallrating+5)
+                defspe = random.randint(overallrating-5, overallrating+5)
                 internationalrep = 1
-                shortpassing = 60
-                freekickaccuracy = 89
+                shortpassing = random.randint(overallrating-5, overallrating+5)
+                freekickaccuracy = random.randint(overallrating-5, overallrating+5)
                 skillmoves = 3
                 faceposerpreset = 0
-                usercaneditname = 0
+                usercaneditname = 1
                 avatarpomid = 0
                 attackingworkrate = 2
                 finishingcode2 = 0
-                aggression = 79
-                acceleration = 69
-                paskic = 73
-                headingaccuracy = 69
+                aggression = random.randint(overallrating-5, overallrating+5)
+                acceleration = random.randint(overallrating-5, overallrating+5)
+                paskic = random.randint(overallrating-5, overallrating+5)
+                headingaccuracy = random.randint(overallrating-5, overallrating+5)
                 iscustomized = 0
                 eyebrowcode = 0
                 runningcode2 = 0
                 modifier = 0
-                gkhandling = 39
+                gkhandling = random.randint(overallrating-5, overallrating+5)
                 eyecolorcode = 5
                 jerseysleevelengthcode = 0
                 accessorycolourcode3 = 0
                 accessorycode1 = 0
                 playerjointeamdate = row[9].value
-                headclasscode = 0
-                defensiveworkrate = 3
+                headclasscode = 1
+                defensiveworkrate = 2
                 tattoofront = 0
                 nationality = row[6].value
                 preferredfoot = row[8].value
                 sideburnscode = 0
                 weakfootabilitytypecode = 3
-                jumping = 69
+                jumping = random.randint(overallrating-5, overallrating+5)
                 personality = 2
                 gkkickstyle = 0
-                stamina = 85
-                playerid = 80000
-                marking = 69
+                stamina = random.randint(overallrating-5, overallrating+5)
+
+                
+                playerid = playerIDCounter
+                playerIDCounter += 1
+
+                marking = random.randint(overallrating-5, overallrating+5)
                 accessorycolourcode4 = 0
-                gkpositioning = 49
+                gkpositioning = random.randint(overallrating-5, overallrating+5)
                 headvariation = 0
                 skillmoveslikelihood = 3
-                shohan = 65
-                skintonecode = random.randint(1,11)
+                shohan = random.randint(overallrating-5, overallrating+5)
+                skintonecode = predictSkinTone(row[1].value)
                 shortstyle = 0
-                overallrating = random.randint(50,90)
+
+                #overallrating = attackerEstimation(ageGetter(birthdate), row[11].value, 55)
+
                 smallsidedshoetypecode = 500
                 emotion = 1
                 runstylecode = 0
@@ -822,13 +1046,14 @@ def playerTableHandler(playerTable, excelFile):
                 hairstylecode = 0
                 bodytypecode = 2
                 animpenaltiesstartposcode = 0
-                pacdiv = 79
+                pacdiv = random.randint(overallrating-5, overallrating+5)
                 runningcode1 = 0
                 preferredposition4 = -1
-                volleys = 83
+                volleys = random.randint(overallrating-5, overallrating+5)
                 accessorycolourcode2 = 0
                 tattoorightleg = 0
-                facialhaircolorcode = random.randint(0,4)
+                facialhaircolorcode = 0
+
 
                 # Construct a row with the modified data
                 row_data = [
@@ -961,9 +1186,6 @@ def playerTableHandler(playerTable, excelFile):
                     facialhaircolorcode
                 ]
 
-                # Update the existing row in the players Excel file with the new data
-                #for col_num, value in enumerate(row_data, start=1):
-                #    players_sheet.cell(row=row_number, column=col_num, value=value)
 
                 # Convert the row data to a tab-delimited string
                 row_string = '\t'.join(map(str, row_data))
@@ -975,6 +1197,23 @@ def playerTableHandler(playerTable, excelFile):
     # Save the changes to the players Excel file
     #players_workbook.save(defaultPlayerTable)
     print('players.txt has been modified and saved as combined.txt')
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
+
 
 playerTableHandler(defaultPlayerTable, output_excel_file)
 
@@ -992,4 +1231,93 @@ with open(newSquad, 'r', encoding='utf-16-le') as new_file:
 # Combining data and writing to another file
 combined_data = original_data + '\n' + new_data
 with open('combined.txt', 'w', encoding='utf-16-le') as combined_file:
+    combined_file.write(combined_data)
+
+
+
+
+
+def playerTeamLinker():
+    # Load the workbook from the output file
+    output_workbook = openpyxl.load_workbook(output_excel_file)
+    output_sheet = output_workbook.active
+
+    start_row_number = 20249
+
+    playerIDCounter = 80000
+    artificalKeyCounter = 21023
+
+    newPlayerLinks = 'newPlayerLinks.txt'
+
+    # Open the text file in write mode
+    with open(newPlayerLinks, 'w', encoding='utf-16-le') as new_text_file:
+        # Iterate through rows in the Excel file
+        for row_number, row in enumerate(output_sheet.iter_rows(min_row=0, max_row=output_sheet.max_row, min_col=1, max_col=127), start=start_row_number):
+        # Example: Extract data from Excel columns and store in variables
+            leaguegoals = 0
+            isamongtopscorers = 0
+            yellows = 0
+            isamongtopscorersinteam = 0
+            jerseynumber = row[0].value
+            position = row[4].value
+
+            artificialkey = artificalKeyCounter
+            artificalKeyCounter += 1
+            
+            teamid = 114899 #MAZATLAN
+            leaguegoalsprevmatch = 0
+            injury = 0
+            leagueappearances = 0
+            istopscorer = 0
+            leaguegoalsprevthreematches = 0
+
+            
+            playerid = playerIDCounter
+            playerIDCounter += 1
+
+            form = 0
+            reds = 0
+            # Construct a row with the modified data
+            row_data = [
+                leaguegoals,
+                isamongtopscorers,
+                yellows,
+                isamongtopscorersinteam,
+                jerseynumber,
+                position,
+                artificialkey,
+                teamid,
+                leaguegoalsprevmatch,
+                injury,
+                leagueappearances,
+                istopscorer,
+                leaguegoalsprevthreematches,
+                playerid,
+                form,
+                reds
+                ]
+            
+            # Convert the row data to a tab-delimited string
+            row_string = '\t'.join(map(str, row_data))
+
+            # Write the row string to the text file
+            new_text_file.write(row_string + '\n')
+
+
+playerTeamLinker()
+
+
+
+
+# Reading the original file
+with open('teamplayerlinks.txt', 'r', encoding='utf-16-le') as original_file:
+    original_data = original_file.read().strip()
+
+# Reading the new file
+with open('newPlayerLinks.txt', 'r', encoding='utf-16-le') as new_file:
+    new_data = new_file.read().strip()
+
+# Combining data and writing to another file
+combined_data = original_data + '\n' + new_data
+with open('newteamplayerlinks.txt', 'w', encoding='utf-16-le') as combined_file:
     combined_file.write(combined_data)
